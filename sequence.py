@@ -30,6 +30,7 @@ MIN_NOTE_LENGTH = BEAT_LENGTH / 2
 # ControlSeq ----------------------------------------------------------------------
 
 DEFAULT_WINDOW_SIZE = BEAT_LENGTH * 4
+DEFAULT_NOTE_DENSITY_BINS = np.arange(12) * 3 + 1
 
 
 #==================================================================================
@@ -291,21 +292,25 @@ class EventSeq:
 
 class Control:
 
-    def __init__(self, pitch_histogram):
+    def __init__(self, pitch_histogram, note_density):
         self.pitch_histogram = pitch_histogram # list
+        self.note_density = note_density # int
     
     def __repr__(self):
-        return 'Control(pitch_histogram={}'.format(
-                self.pitch_histogram)
+        return 'Control(pitch_histogram={}, note_density={})'.format(
+                self.pitch_histogram, self.note_density)
     
     def to_array(self):
         feat_dims = ControlSeq.feat_dims()
+        ndens = np.zeros([feat_dims['note_density']])
+        ndens[self.note_density] = 1. # [dens_dim]
         phist = np.array(self.pitch_histogram) # [hist_dim]
-        return np.concatenate(phist, 0) # [dens_dim + hist_dim]
+        return np.concatenate([ndens, phist], 0) # [dens_dim + hist_dim]
 
 
 class ControlSeq:
 
+    note_density_bins = DEFAULT_NOTE_DENSITY_BINS
     window_size = DEFAULT_WINDOW_SIZE
 
     @staticmethod
@@ -347,8 +352,11 @@ class ControlSeq:
                 else np.ones([12]) / 12
             ).tolist()
 
- 
-            controls.append(Control(pitch_histogram))
+            note_density = max(np.searchsorted(
+                    ControlSeq.note_density_bins,
+                    note_count, side='right') - 1, 0)
+
+            controls.append(Control(pitch_histogram, note_density))
 
         return ControlSeq(controls)
 
@@ -358,7 +366,11 @@ class ControlSeq:
 
     @staticmethod
     def feat_dims():
-        return {'pitch_histogram': 12}
+        note_density_dim = len(ControlSeq.note_density_bins)
+        return collections.OrderedDict([
+            ('pitch_histogram', 12),
+            ('note_density', note_density_dim)
+        ])
 
     @staticmethod
     def feat_ranges():
@@ -373,8 +385,10 @@ class ControlSeq:
     def recover_compressed_array(array):
         feat_dims = ControlSeq.feat_dims()
         assert array.shape[1] == 1 + feat_dims['pitch_histogram']
+        ndens = np.zeros([array.shape[0], feat_dims['note_density']])
+        ndens[np.arange(array.shape[0]), array[:, 0]] = 1. # [steps, dens_dim]
         phist = array[:, 1:].astype(np.float64) / 255 # [steps, hist_dim]
-        return np.concatenate([phist], 1) # [steps, dens_dim + hist_dim]
+        return np.concatenate([ndens, phist], 1) # [steps, dens_dim + hist_dim]
 
     def __init__(self, controls):
         for control in controls:
@@ -382,9 +396,12 @@ class ControlSeq:
         self.controls = copy.deepcopy(controls)
 
     def to_compressed_array(self):
+        ndens = [control.note_density for control in self.controls]
+        ndens = np.array(ndens, dtype=np.uint8).reshape(-1, 1)
         phist = [control.pitch_histogram for control in self.controls]
         phist = (np.array(phist) * 255).astype(np.uint8)
         return np.concatenate([
+            ndens, # [steps, 1] density index
             phist # [steps, hist_dim] 0-255
         ], 1) # [steps, hist_dim + 1]
     
