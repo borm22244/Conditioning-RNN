@@ -358,9 +358,7 @@ class ControlSeq:
 
     @staticmethod
     def feat_dims():
-        return collections.OrderedDict([
-            ('pitch_histogram', 12),
-        ])
+        return {'pitch_histogram': 12}
 
     @staticmethod
     def feat_ranges():
@@ -376,7 +374,7 @@ class ControlSeq:
         feat_dims = ControlSeq.feat_dims()
         assert array.shape[1] == 1 + feat_dims['pitch_histogram']
         phist = array[:, 1:].astype(np.float64) / 255 # [steps, hist_dim]
-        return np.concatenate([ phist], 1) # [steps, dens_dim + hist_dim]
+        return np.concatenate([phist], 1) # [steps, dens_dim + hist_dim]
 
     def __init__(self, controls):
         for control in controls:
