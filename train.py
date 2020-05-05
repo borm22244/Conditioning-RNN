@@ -196,7 +196,6 @@ try:
             assert controls.shape[0] == window_size
         else:
             controls = None
-
         init = torch.randn(batch_size, model.init_dim).to(device)
         outputs = model.generate(init, window_size, events=events[:-1], controls=controls,
                                  teacher_forcing_ratio=teacher_forcing_ratio, output_type='logit')

@@ -95,7 +95,7 @@ class PerformanceRNN(nn.Module):
     def expand_controls(self, controls, steps):
         # [1 or steps, batch_size, control_dim]
         assert len(controls.shape) == 3
-        assert controls.shape[2] == self.control_dim
+        assert controls.shape[2] == self.control_dim 
         if controls.shape[0] > 1:
             assert controls.shape[0] >= steps
             return controls[:steps]

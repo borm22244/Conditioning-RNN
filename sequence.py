@@ -381,10 +381,11 @@ class ControlSeq:
     @staticmethod
     def recover_compressed_array(array):
         feat_dims = ControlSeq.feat_dims()
-        assert array.shape[1] == 1 + feat_dims['pitch_histogram']
+        assert array.shape[1] == feat_dims['pitch_histogram']
         #ndens = np.zeros([array.shape[0], feat_dims['note_density']])
         #ndens[np.arange(array.shape[0]), array[:, 0]] = 1. # [steps, dens_dim]
-        phist = array[:, 1:].astype(np.float64) / 255 # [steps, hist_dim]
+        phist = array[:,:].astype(np.float64) / 255 # [steps, hist_dim]
+        print(phist.shape)
         return phist # [steps, hist_dim]
 
     def __init__(self, controls):

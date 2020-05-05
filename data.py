@@ -23,6 +23,7 @@ class Dataset:
         for path in paths:
             eventseq, controlseq = torch.load(path)
             controlseq = ControlSeq.recover_compressed_array(controlseq)
+            print(controlseq.shape)
             assert len(eventseq) == len(controlseq)
             self.samples.append((eventseq, controlseq))
             self.seqlens.append(len(eventseq))
