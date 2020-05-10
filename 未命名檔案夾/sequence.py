@@ -292,7 +292,7 @@ class EventSeq:
 
 class Control:
 
-    def __init__(self, pitch_histogram, note_density):
+    def __init__(self, note_density):
         self.note_density = note_density # int
     
     def __repr__(self):
@@ -302,7 +302,7 @@ class Control:
         feat_dims = ControlSeq.feat_dims()
         ndens = np.zeros([feat_dims['note_density']])
         ndens[self.note_density] = 1. # [dens_dim]
-        return ndens # [dens_dim + hist_dim]
+        return ndens
 
 
 class ControlSeq:
@@ -347,7 +347,7 @@ class ControlSeq:
                     ControlSeq.note_density_bins,
                     note_count, side='right') - 1, 0)
 
-            controls.append(Control(pitch_histogram))
+            controls.append(Control(note_density))
 
         return ControlSeq(controls)
 
@@ -358,7 +358,6 @@ class ControlSeq:
     @staticmethod
     def feat_dims():
         note_density_dim = len(ControlSeq.note_density_bins)
-        print(note_density_dim)
         return {'note_density': note_density_dim}
 
     @staticmethod
@@ -375,8 +374,7 @@ class ControlSeq:
         feat_dims = ControlSeq.feat_dims()
         ndens = np.zeros([array.shape[0], feat_dims['note_density']])
         ndens[np.arange(array.shape[0]), array[:, 0]] = 1. # [steps, dens_dim]
-        return ndens # [steps, dens_dim + hist_dim]
-
+        return ndens
     def __init__(self, controls):
         for control in controls:
             assert isinstance(control, Control)
@@ -385,10 +383,7 @@ class ControlSeq:
     def to_compressed_array(self):
         ndens = [control.note_density for control in self.controls]
         ndens = np.array(ndens, dtype=np.uint8).reshape(-1, 1)
-        phist = [control.pitch_histogram for control in self.controls]
-        phist = (np.array(phist) * 255).astype(np.uint8)
-        print(ndens.shape)
-        return ndens
+        return ndens 
     
 
 

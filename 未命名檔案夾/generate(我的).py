@@ -130,7 +130,6 @@ with torch.no_grad():
 
 outputs = outputs.cpu().numpy().T # [batch, steps]
 
-print(outputs)
 
 os.makedirs(output_path, exist_ok=True)
 

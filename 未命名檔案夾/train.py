@@ -113,7 +113,6 @@ control_ratio = options.control_ratio
 
 event_dim = EventSeq.dim()
 control_dim = ControlSeq.dim()
-print(control_dim)
 model_config = config.model
 model_params = utils.params2dict(options.model_path)
 model_config.update(model_params)
@@ -189,7 +188,6 @@ try:
     batch_gen = dataset.batches(batch_size, window_size, stride_size)
 
     for iteration, (events, controls) in enumerate(batch_gen):
-        print(controls.shape)
         events = torch.LongTensor(events).to(device)
         assert events.shape[0] == window_size
 
@@ -203,7 +201,6 @@ try:
         outputs = model.generate(init, window_size, events=events[:-1], controls=controls,
                                  teacher_forcing_ratio=teacher_forcing_ratio, output_type='logit')
         assert outputs.shape[:2] == events.shape[:2]
-
         loss = loss_function(outputs.view(-1, event_dim), events.view(-1))
         model.zero_grad()
         loss.backward()
